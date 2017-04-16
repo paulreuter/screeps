@@ -1,7 +1,10 @@
-var roleHarvester = require('role.harvester');
+var roleMiner = require('role.harvester');
 var roleUpgrader = require('role.upgrader');
 var roleBuilder = require('role.builder');
-var desiredHarvesters = 2;
+var roleHousekeeper = require('role.housekeeper'):
+
+var desiredMiners = 3;
+var desiredMiners = 2;
 var desiredBuilders = 1;
 var desiredUpgraders = 1;
 
