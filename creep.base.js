@@ -9,7 +9,7 @@
 
 module.exports = {
     collectEnergy: function(creep) {
-            var targets = creep.room.find(FIND_STRUCTURES, {filter: (structure)=>{return structure.structureType == STRUCTURE_CONTAINER && structure.store.energy > 0}});
+            var targets = creep.room.find(FIND_STRUCTURES, {filter: (structure)=>{return structure.structureType == STRUCTURE_CONTAINER && structure.store[RESOURCE_ENERGY] >= 150}});
             if( targets > 0)
             {
                 targets = _.sortBy(targets, s => creep.pos.getRangeTo(s));
@@ -21,6 +21,11 @@ module.exports = {
                 if(energy != null){
                     if(creep.pickup(energy) == ERR_NOT_IN_RANGE){
                         creep.moveTo(energy.pos)
+                    }
+                } else {
+                    var sources = creep.room.find(FIND_SOURCES);
+                    if(creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(sources[0], {visualizePathStyle: {stroke: '#ffaa00'}});
                     }
                 }
             }
