@@ -1,9 +1,6 @@
-var roleHarvester = require('role.harvester');
-var roleUpgrader = require('role.upgrader');
-var roleBuilder = require('role.builder');
-var roleMiner = require('role.miner');
-var spawnController = require('spawn.controller');
-
+var creepController = require('creep.controller');
+var roomController = require('room.controller');
+var layoutRoom = require('layout.room');
 module.exports.loop = function () {
 /*
     var tower = Game.getObjectById('TOWER_ID');
@@ -14,28 +11,15 @@ module.exports.loop = function () {
         if(closestDamagedStructure) {
             tower.repair(closestDamagedStructure);
         }
-
         var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
         if(closestHostile) {
             tower.attack(closestHostile);
         }
     }
 */
-    spawnController.run(Game.spawns['Spawn1']);
-
-    for(var name in Game.creeps) {
-        var creep = Game.creeps[name];
-        if(creep.memory.role == 'carrier') {
-            roleHarvester.run(creep);
-        }
-        if(creep.memory.role == 'upgrader') {
-            roleUpgrader.run(creep);
-        }
-        if( creep.memory.role == 'miner') {
-            roleMiner.run(creep);
-        }
-        if(creep.memory.role == 'builder') {
-            roleBuilder.run(creep);
-        }
-    } 
+    var spawn = Game.spawns['Spawn1'];
+    // creepController.setDesiredForRole(spawn.room, 'miner', 1);
+    // creepController.setDesiredForRole(spawn.room, 'upgrader',1);
+    creepController.run(spawn);
+    roomController.run(spawn.room);
 }

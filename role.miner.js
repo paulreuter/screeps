@@ -8,7 +8,7 @@ var roleMiner = {
         var desiredSource = creep.memory.mySource;
         if( desiredSource == 0 || desiredSource == null)
         {
-            console.log(creep + ' looking for a source to mine');
+            // console.log(creep + ' looking for a source to mine');
             var miners = _.filter(Game.creeps, (creep) => creep.memory.role == 'miner');
             var sources = creep.room.find(FIND_SOURCES);
             sources.sort((a,b) => creep.pos.getRangeTo(a) - creep.pos.getRangeTo(b));
@@ -36,9 +36,7 @@ var roleMiner = {
                 }
                 creep.memory.mySource = id;
                 desiredSource = id;
-                console.log(sources[i].pos);
-                var flagInRange = sources[i].pos.findClosestByPath(FIND_FLAGS);
-                console.log(JSON.stringify(flagInRange));
+                // console.log(sources[i].pos);
                 creep.memory.flag = sources[i].pos.findClosestByRange(FIND_FLAGS).name;
                 break;
             }
