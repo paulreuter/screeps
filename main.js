@@ -1,6 +1,5 @@
 var creepController = require('creep.controller');
 var roomController = require('room.controller');
-var layoutRoom = require('layout.room');
 
 function defendRoom(room) {
     var hostiles = room.find(FIND_HOSTILE_CREEPS);
