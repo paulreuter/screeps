@@ -71,6 +71,22 @@ module.exports.getCivilianRepairList = function(room)
     
 module.exports.repair = function(creep)
     {
+        if( !Object.keys(creep.memory.target).length)
+        {
+            var repList = module.exports.getCivilianRepairList(creep.room);
+            if( repList.length)
+            {
+
+                var target = repList.shift();
+                creep.memory.target['REPAIR'] = target.id;
+                if(creep.repair(target) == ERR_NOT_IN_RANGE) 
+                {
+                    creep.moveTo(target);  
+                }
+                return true;
+            } 
+        }
+
         if( creep.memory.target['REPAIR'])
         {
             var target = Game.getObjectById(creep.memory.target['REPAIR']);
@@ -83,22 +99,8 @@ module.exports.repair = function(creep)
                 return true;
             }
             delete creep.memory.target['REPAIR'];
+            return true;
         } 
-        if( ! creep.memory.target['REPAIR'])
-        {
-            var repList = module.exports.getCivilianRepairList(creep.room);
-            if( repList.length)
-            {
-
-                var target = repList[0];
-                creep.memory.target['REPAIR'] = target.id;
-                if(creep.repair(target) == ERR_NOT_IN_RANGE) 
-                {
-                    creep.moveTo(target);  
-                }
-                return true;
-            } 
-        }
         return false;
     }
     
@@ -154,7 +156,7 @@ module.exports.collectEnergy = function(creep, target_types) {
             }
             delete creep.memory.target['COLLECT'];
         } 
-        if( ! creep.memory.target['COLLECT'])
+        if( !Object.keys(creep.memory.target).length)
         {
             var target;
             for( var i in target_types)
@@ -176,20 +178,7 @@ module.exports.collectEnergy = function(creep, target_types) {
     
 module.exports.deliverEnergy = function(creep, target_types) 
     {
-        if( creep.memory.target['DELIVER'])
-        {
-            var target = Game.getObjectById(creep.memory.target);
-            // console.log('Delivering to target: '+ JSON.stringify(target));
-            if( target)
-            {
-                if(creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(target, {visualizePathStyle: {stroke: '#ffffff'}});
-                }
-                return true;
-            }
-            delete creep.memory.target['DELIVER'];
-        } 
-        if( ! creep.memory.target['DELIVER'])
+        if( !Object.keys(creep.memory.target).length)
         {
             var target;
             for( var i in target_types)
@@ -209,7 +198,21 @@ module.exports.deliverEnergy = function(creep, target_types)
                 }
                 return true;
             }
-        }
+        }    
+        if( creep.memory.target['DELIVER'])
+        {
+            var target = Game.getObjectById(creep.memory.target);
+            // console.log('Delivering to target: '+ JSON.stringify(target));
+            if( target)
+            {
+                if(creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(target, {visualizePathStyle: {stroke: '#ffffff'}});
+                }
+                return true;
+            }
+            delete creep.memory.target['DELIVER'];
+            return true;
+        } 
         return false;
     };
 
