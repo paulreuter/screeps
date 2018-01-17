@@ -8,21 +8,10 @@
  */
 
 module.exports = {
-    buildOverRoad: function(room, arg1, arg2, arg3)
+    buildOverRoad: function(room, x, y, type)
     {
-        console.log('BuildOverRoad: '+ JSON.stringify(arg1)+', '+JSON.stringify(arg2)+', '+JSON.stringify(arg3));
-        var pos;
-        var type;
-        if( arg1 instanceof RoomPosition)
-        {
-            pos = arg1;
-            type = arg2;
-        } else 
-        {
-            pos = room.getPositionAt(arg1, arg2);
-            type = arg3;
-        }
-        
+        var pos = room.getPositionAt(x, y);
+
         const look = pos.look();
         if( look.length)
         {

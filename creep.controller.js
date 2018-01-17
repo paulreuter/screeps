@@ -26,12 +26,18 @@ function wantToBuild(spawn, thisRole)
         if(   status == OK )
         {
             var newName = thisRole + ' ' + Game.time;
-            if( OK == spawn.spawnCreep(spawn.room.memory[thisRole + '_configuration'], newName,  {memory: {role: thisRole}}) )
+            var status = spawn.spawnCreep(spawn.room.memory[thisRole + '_configuration'], newName,  {memory: {role: thisRole}});
+            if( OK ==  status)
             {
                 console.log('Spawning new '+thisRole+': ' + newName);
                 // console.log('with role:' +Game.creeps[newName].memory.role);
             }
         } else {
+            if( status == ERR_NOT_ENOUGH_ENERGY)
+            {
+                console.log( 'Not enough energy for:'+spawn.room.memory[thisRole+'_configuration']);
+                
+            }
             console.log('spawning failed, status:' + status);
         }
         return true;
@@ -72,7 +78,7 @@ module.exports = {
             for(var name in Memory.creeps) {
                 if(!Game.creeps[name]) {
                     delete Memory.creeps[name];
-                    console.log('Clearing non-existing creep memory:', name);
+                    // console.log('Clearing non-existing creep memory:', name);
                 }
             }
             // console.log( 'checking energy levels: '+room.energyAvailable+ '/'+room.energyCapacityAvailable);

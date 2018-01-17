@@ -114,7 +114,7 @@ function buildClusterAt(room, offset, rotation)
             room.createConstructionSite(buildPosition, STRUCTURE_ROAD);
         } else 
         {
-            helper.buildOverRoad(room, buildPosition, extensionPattern[i].type);
+            helper.buildOverRoad(room, buildPosition.x, buildPosition.y, extensionPattern[i].type);
         }
     }
 }

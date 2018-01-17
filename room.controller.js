@@ -9,14 +9,6 @@
 var actions = require('room.actions');
 var conditions = require('room.conditions');
 
-// STATE_UNINITIALIZED
-// STATE_BOOTSTRAP_PRIMARY_MINING
-// STATE_BOOTSTRAP_EXTENSIONS
-// STATE_BOOTSTRAP_CONTAINER
-// STATE_BOOTSTRAP_CONTROLLER
-// STATE_BOOTSTRAP_DEFENSES
-
-
 function refreshStateMachine(room)
 {
     // note: some states have condition 'TRUE'
@@ -25,9 +17,8 @@ function refreshStateMachine(room)
     room.memory.state_machine = {
             UNINITIALIZED: [{
                 conditions: ['SPAWN_EXISTS'], 
-                actions:['INITIALIZE'], 
+                actions:['INITIALIZE', 'REFRESH_BLUEPRINTS'], 
                 next_state:'PREPARE_SOURCES'}],
-                // next_state:'UNINITIALIZED'}],
             PREPARE_SOURCES: [{
                 conditions: ['TRUE'],
                 actions:['PREPARE_SOURCES'],
@@ -47,22 +38,28 @@ function refreshStateMachine(room)
             RCL_TWO: [{
                 conditions: ['RCL_LEVEL_TWO'],
                 actions: ['BUILD_EXTENSIONS'],
-                next_state:'EXTENSIONS'}],
-            EXTENSIONS: [{
+                next_state:'EXTENSION_TWO'}],
+            EXTENSION_TWO: [{
                 conditions: ['FIVE_EXTENSIONS_BUILT'],
                 actions: ['REFRESH_BLUEPRINTS','BUILD_CONTROLLER_SUPPORT'], 
                 next_state: 'CONTROLLER' }],
             CONTROLLER: [{
                 conditions: ['ALL_CONSTRUCTION_DONE'], 
-                actions: ['BUILD_WALLS'],
-                next_state: 'RCL_THREE' }],
+                actions: ['BUILD_FORTIFICATIONS', 'REFRESH_BLUEPRINTS','USE_STATIONARY_UPGRADER'],
+                next_state: 'RCL_LEVEL_THREE' }],
             RCL_THREE: [{
                 conditions: ['RCL_LEVEL_THREE'],
-                actions: ['BUILD_TOWER'],
+                actions: ['BUILD_EXTENSIONS','BUILD_TOWER'],
+                next_state:'EXTENSION_THREE'}],
+            EXTENSION_THREE: [{
+                conditions: ['ALL_CONSTRUCTION_DONE'],
+                actions:['REFRESH_BLUEPRINTS'],
                 next_state:'WAIT'}],
             WAIT: [{
-                conditions: ['FALSE'],
-            }]
+                conditions: ['MOSTLY_FALSE'],
+                actions:['RESET_STATE_MACHINE'],
+                next_state:'WAIT'}]
+                
     };
 
 }
@@ -80,6 +77,7 @@ function evaluateState(room) {
     }
     if( Game.time % 1 == 0)
     {
+        refreshStateMachine(room);
         var stateTransfers = room.memory.state_machine[room.memory.state];
         for( var i in stateTransfers)
         {

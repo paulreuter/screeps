@@ -6,33 +6,20 @@ var roleHousekeeper = {
         base.toggleMode(creep)
         if( creep.memory.collecting )
         {
-            base.collectEnergy(creep, ['COLLECT_GROUND', 'COLLECT_BASE', 'COLLECT_MINING']);
+            base.collectEnergy(creep, ['COLLECT_GROUND', 'COLLECT_BASE', 'COLLECT_MINING', 'COLLECT_SOURCE']);
+            return;
         } else {
-            var targets = creep.room.find(FIND_STRUCTURES, 
-                {
-                filter: (structure) => {
-                    return (typeof(structure) != "undefined") && (structure.structureType == STRUCTURE_EXTENSION ||
-                        structure.structureType == STRUCTURE_SPAWN) && (structure.energy < structure.energyCapacity);}});
-            if( !targets)
+            if( base.deliverEnergy(creep, ['DESTINATION_SPAWN']))
             {
-                targets = creep.room.find(FIND_STRUCTURES, {
-                filter: (structure) => {
-                        return (structure.hits < structure.hitsMax)
-                    }
-                });
-                if( targets.length > 0)
-                {
-                    var i = creep.pos.findClosestByPath(targets);
-                    if(creep.repair(targets[0]) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(targets[0]);
-                    }
-                }
+                // check if adjacent to spawn and extend life
+                base.tryRenew(creep);
+                return;
             }
-            if(targets.length > 0) {
-                if(creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
-                }
-            }
+            if( base.repair(creep))
+                return;              
+            var builder = require('role.builder');
+            if( builder.build(creep))
+                return;
         }
     }
 };

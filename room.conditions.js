@@ -18,6 +18,10 @@ module.exports.FALSE = function(room)
     return false;
 }
 
+module.exports.MOSTLY_FALSE = function( room)
+{
+    return Math.random() > 0.99;
+}
 
 module.exports.SPAWN_EXISTS = function(room)
 {
@@ -56,6 +60,11 @@ module.exports.ALL_SOURCES_HAVE_CONTAINERS = function(myRoom)
 module.exports.RCL_LEVEL_TWO = function(myRoom)
 {
     return (myRoom.controller.level > 1 );
+};
+
+module.exports.RCL_LEVEL_THREE = function(myRoom)
+{
+    return (myRoom.controller.level > 2 );
 };
 
 module.exports.FIVE_EXTENSIONS_BUILT = function(myRoom)

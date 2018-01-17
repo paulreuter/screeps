@@ -8,7 +8,7 @@ var roleUpgrader = {
         if(creep.memory.collecting) 
         {
             
-            base.collectEnergy(creep,['COLLECT_BASE','COLLECT_MINING']);
+            base.collectEnergy(creep,['COLLECT_NEAREST_CONTAINER', 'COLLECT_SOURCE']);
         }
         else {
             if(creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {

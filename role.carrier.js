@@ -7,9 +7,10 @@ var roleCarrier = {
         if( creep.memory.collecting)
         {
             base.collectEnergy(creep, ['COLLECT_MINING']);
+            return true;
         } else 
         {
-            base.deliverEnergy(creep, ['DESTINATION_BASE']);
+            base.deliverEnergy(creep, ['DESTINATION_BASE', 'DESTINATION_ANY_CONTAINER']);
         }
     }
 };
