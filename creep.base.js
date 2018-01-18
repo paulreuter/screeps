@@ -51,7 +51,7 @@ module.exports.getCivilianRepairList = function(room)
                             return false;
                     }
                     return (s.structureType != STRUCTURE_WALL && s.hits < s.hitsMax);}});
-            allNonHealthy = nonHealthyOwned.concat(nonHealthyCivilians);
+            var allNonHealthy = nonHealthyOwned.concat(nonHealthyCivilians);
             allNonHealthy = _.sortBy(allNonHealthy, (s)=> {
                 if( s.structureType == STRUCTURE_RAMPART)
                 {
