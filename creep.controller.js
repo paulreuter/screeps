@@ -35,7 +35,9 @@ function wantToBuild(spawn, thisRole)
         } else {
             if( status == ERR_NOT_ENOUGH_ENERGY)
             {
-                console.log( 'Not enough energy for:'+spawn.room.memory[thisRole+'_configuration']);
+                console.log( 'Not enough energy for:'+spawn.room.memory[thisRole+'_configuration, resettting configurations']);
+                var conf = require('creep.configuration');
+                conf.refreshConfigurations(spawn.room);
                 
             }
             console.log('spawning failed, status:' + status);

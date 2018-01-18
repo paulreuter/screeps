@@ -45,7 +45,7 @@ function refreshStateMachine(room)
                 next_state: 'CONTROLLER' }],
             CONTROLLER: [{
                 conditions: ['ALL_CONSTRUCTION_DONE'], 
-                actions: ['BUILD_FORTIFICATIONS','USE_STATIONARY_UPGRADER', 'REFRESH_BLUEPRINTS'],
+                actions: ['BUILD_FORTIFICATIONS', 'REFRESH_BLUEPRINTS','USE_STATIONARY_UPGRADER'],
                 next_state: 'RCL_LEVEL_THREE' }],
             RCL_THREE: [{
                 conditions: ['RCL_LEVEL_THREE'],
