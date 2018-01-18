@@ -242,7 +242,7 @@ module.exports.collections = {
     {
         var target;
         var flags = creep.room.find(FIND_FLAGS);
-        targets = [];
+        var targets = [];
         for( var i in flags)
         {
             if( flags[i].name.startsWith('Source'))
