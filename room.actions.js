@@ -263,10 +263,14 @@ module.exports.BUILD_RAMPARTS = function( room)
 module.exports.BUILD_FORTIFICATIONS = function(room)
 {
     let cachedCostMatrix = new PathFinder.CostMatrix;
+    var structures = room.find(FIND_STRUCTURES);
     var wall_construction = room.find(FIND_MY_CONSTRUCTION_SITES, {filter:(s) => {
         return (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)}});
-                    wall_construction.forEach( wall => {
+    wall_construction.forEach( wall => {
                        cachedCostMatrix.set(wall.pos.x, wall.pos.y, 255) });
+    structures.forEach( wall => {
+                       cachedCostMatrix.set(wall.pos.x, wall.pos.y, 255) });
+                     
     var spawn = room.find(FIND_MY_SPAWNS)[0];
     buildOneElementInDirection( room, FIND_EXIT_TOP, spawn.pos, STRUCTURE_RAMPART, cachedCostMatrix);
     buildOneElementInDirection( room, FIND_EXIT_RIGHT, spawn.pos, STRUCTURE_RAMPART, cachedCostMatrix);

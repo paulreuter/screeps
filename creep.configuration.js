@@ -30,6 +30,14 @@ const creepConfigurations = [
         carrier:[[ CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE]],
         upgrader: [[WORK, WORK, WORK,CARRY, CARRY, CARRY, MOVE, MOVE], [WORK,WORK,WORK,WORK, CARRY, MOVE, MOVE]],
         housekeeper:[[WORK, WORK, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE]],
+    },
+    {
+        min:800,
+        miner: [[WORK,WORK,WORK,WORK, WORK, WORK,MOVE,MOVE,MOVE, MOVE]],
+        builder:[[WORK, WORK, WORK, CARRY, CARRY, CARRY, CARRY, CARRY,MOVE, MOVE, MOVE, MOVE]],
+        carrier:[[ CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE, MOVE]],
+        upgrader: [[WORK, WORK, WORK, WORK, WORK,CARRY, CARRY, CARRY,MOVE, MOVE, MOVE], [WORK,WORK,WORK,WORK, WORK, WORK, CARRY,MOVE, MOVE, MOVE]],
+        housekeeper:[[WORK, WORK, WORK, CARRY, CARRY, CARRY, CARRY, CARRY, MOVE,MOVE, MOVE, MOVE, MOVE]],
     }
     
     ]

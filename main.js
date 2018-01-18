@@ -32,6 +32,10 @@ module.exports.loop = function () {
     creepController.run(spawn);
     roomController.run(spawn.room);
     defendRoom(spawn.room);
+    var base = require('creep.base');
+    base.resetRepairList(spawn.room);
+    var list = base.getCivilianRepairList(spawn.room);
+    console.log( Game.time + ': this tick we had '+list.length + 'repair targets');
     // var creepConf = require('creep.configuration');
     // creepConf.refreshConfigurations(spawn.room);
     // const actions = require('room.actions');

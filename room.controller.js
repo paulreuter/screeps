@@ -9,12 +9,7 @@
 var actions = require('room.actions');
 var conditions = require('room.conditions');
 
-function refreshStateMachine(room)
-{
-    // note: some states have condition 'TRUE'
-    // flags created by an action apparently can't 
-    //    be used in the same game tick
-    room.memory.state_machine = {
+const state_machine = {
             UNINITIALIZED: [{
                 conditions: ['SPAWN_EXISTS'], 
                 actions:['INITIALIZE', 'REFRESH_BLUEPRINTS'], 
@@ -45,8 +40,14 @@ function refreshStateMachine(room)
                 next_state: 'CONTROLLER' }],
             CONTROLLER: [{
                 conditions: ['ALL_CONSTRUCTION_DONE'], 
-                actions: ['BUILD_FORTIFICATIONS', 'USE_STATIONARY_UPGRADER', 'REFRESH_BLUEPRINTS'],
-                next_state: 'RCL_LEVEL_THREE' }],
+                actions: ['USE_STATIONARY_UPGRADER', 'REFRESH_BLUEPRINTS'],
+                next_state: 'BUILD_FORTIFICATIONS' }],
+            BUILD_FORTIFICATIONS: [{
+                conditions: ['ALL_CONSTRUCTION_DONE', 'ALL_RAMPARTS_HEALTHY'],
+                actions: ['BUILD_NEXT_RAMPART']},{
+                conditions: ['ALL_CONSTRUCTION_DONE', 'ALL_RAMPARTS_HEALTHY', 'ALL_EXITS_HAVE_RAMPARTS'],
+                actions: ['BUILD_WALLS'],
+                next_state: 'RCL_THREE'}],
             RCL_THREE: [{
                 conditions: ['RCL_LEVEL_THREE'],
                 actions: ['BUILD_EXTENSIONS','BUILD_TOWER'],
@@ -59,26 +60,18 @@ function refreshStateMachine(room)
                 conditions: ['MOSTLY_FALSE'],
                 actions:['RESET_STATE_MACHINE'],
                 next_state:'WAIT'}]
-                
     };
 
-}
-
 function evaluateState(room) {
-    if( ! room.memory.state_machine)
+    if( !room.memory.state ) 
     {
-        if( !room.memory.state ) 
-        {
-        // actions.INITIALIZE(spawn);
-            console.log('Room state not yet set, switching to STATE_UNINITIALIZED');
-            room.memory.state = 'UNINITIALIZED';
-        }
-        refreshStateMachine(room);
+    // actions.INITIALIZE(spawn);
+        console.log('Room state not yet set, switching to STATE_UNINITIALIZED');
+        room.memory.state = 'UNINITIALIZED';
     }
     if( Game.time % 1 == 0)
     {
-        refreshStateMachine(room);
-        var stateTransfers = room.memory.state_machine[room.memory.state];
+        var stateTransfers = state_machine[room.memory.state];
         for( var i in stateTransfers)
         {
             var myConditions = stateTransfers[i].conditions;

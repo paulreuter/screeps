@@ -29,43 +29,47 @@ function getEnergyFromTarget(creep, target)
     return false;
 }
 
-module.exports.repairList ={};
+module.exports.repairList = {};
 
+module.exports.resetRepairList =function(room)
+    {
+        delete module.exports.repairList[room.name];
+    }
 
 module.exports.getCivilianRepairList = function(room)
     {
-        if( ! module.exports.repairList[room.name])
+        if( !(module.exports.repairList && module.exports.repairList[room.name]))
         {
-            console.log('Recaclulating repair list');
+            console.log('Calculating repair list for tick '+ Game.time);
             var nonHealthyOwned = room.find(FIND_MY_STRUCTURES, {filter: 
                 (s)=> { 
-                return s.hits < s.hitsMax;}});
+                    return s.hits < s.hitsMax;}});
             var nonHealthyCivilians = room.find(FIND_STRUCTURES, {filter: 
                 (s)=> { 
+                    // console.log( 'Filtering: '+ JSON.stringify(s));
                     if( s.structureType == STRUCTURE_RAMPART)
                     {
                         if( s.hits < RAMPART_DECAY_AMOUNT * 10)
                         {
+                            // console.log( 'true (' + s.hits + '/'+RAMPART_DECAY_AMOUNT);
                             return true;
                         } 
-                            return false;
+                        // console.log( 'false');
+                        return false;
                     }
-                    return (s.structureType != STRUCTURE_WALL && s.hits < s.hitsMax);}});
-            var allNonHealthy = nonHealthyOwned.concat(nonHealthyCivilians);
+                    // console.log( s.structureType == STRUCTURE_WALL ? s.hits < room.memory.wallhp : s.hits < s.hitsMax);
+                    return (s.structureType == STRUCTURE_WALL ? s.hits < room.memory.wallhp : s.hits < s.hitsMax);}});
+            var allNonHealthy = nonHealthyCivilians.concat(nonHealthyOwned);
             allNonHealthy = _.sortBy(allNonHealthy, (s)=> {
-                if( s.structureType == STRUCTURE_RAMPART)
-                {
-                    if( s.hits < RAMPART_DECAY_AMOUNT * 10)
-                    {
-                        return 0;
-                    }
-                    return (s.hits / s.hitsMax) +1;
-                } else 
-                return (s.hits / s.hitsMax + (( s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART ) ? 1: 0));
+                return (s.hits / s.hitsMax);
                 } );
-            console.log( 'Sorted list: ' + JSON.stringify( allNonHealthy));
+            if( ! module.exports.repairList)
+            {
+                console.log( 'repairlist was cleared');
+                module.exports.repairList = {};
+            }
             module.exports.repairList[room.name] = allNonHealthy;
-        }
+        } 
         return module.exports.repairList[room.name];
     }
     
@@ -90,7 +94,7 @@ module.exports.repair = function(creep)
             if( repList.length)
             {
 
-                var target = repList[0];
+                var target = repList.shift();
                 creep.memory.target['REPAIR'] = target.id;
                 if(creep.repair(target) == ERR_NOT_IN_RANGE) 
                 {
