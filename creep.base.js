@@ -51,7 +51,7 @@ module.exports.getCivilianRepairList = function(room)
                             return false;
                     }
                     return (s.structureType != STRUCTURE_WALL && s.hits < s.hitsMax);}});
-            allNonHealthy = nonHealthyOwned.concat(nonHealthyCivilians);
+            var allNonHealthy = nonHealthyOwned.concat(nonHealthyCivilians);
             allNonHealthy = _.sortBy(allNonHealthy, (s)=> {
                 if( s.structureType == STRUCTURE_RAMPART)
                 {
@@ -239,7 +239,7 @@ module.exports.collections = {
     {
         var target;
         var flags = creep.room.find(FIND_FLAGS);
-        targets = [];
+        var targets = [];
         for( var i in flags)
         {
             if( flags[i].name.startsWith('Source'))
@@ -325,7 +325,7 @@ module.exports.collections = {
 module.exports.destinations = {
     DESTINATION_SPAWN: function(creep)
     {
-        targets = creep.room.find(FIND_STRUCTURES, {
+        var targets = creep.room.find(FIND_STRUCTURES, {
         filter: (structure) => {
             return (structure.structureType == STRUCTURE_EXTENSION ||
                 structure.structureType == STRUCTURE_SPAWN

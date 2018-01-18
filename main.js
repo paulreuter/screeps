@@ -1,6 +1,5 @@
 var creepController = require('creep.controller');
 var roomController = require('room.controller');
-var layoutRoom = require('layout.room');
 
 function defendRoom(room) {
     var hostiles = room.find(FIND_HOSTILE_CREEPS);
@@ -35,11 +34,11 @@ module.exports.loop = function () {
     defendRoom(spawn.room);
     // var creepConf = require('creep.configuration');
     // creepConf.refreshConfigurations(spawn.room);
-    const actions = require('room.actions');
-    if( ! spawn.room.memory.buildwalls)
-    {
-        actions.BUILD_FORTIFICATIONS(spawn.room);
-        spawn.room.memory.buildwalls = true;
-    }
+    // const actions = require('room.actions');
+    // if( ! spawn.room.memory.buildwalls)
+    // {
+    //     actions.BUILD_FORTIFICATIONS(spawn.room);
+    //     spawn.room.memory.buildwalls = true;
+    // }
     // destroyAllRampartsWalls(spawn.room);
 }
