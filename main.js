@@ -34,11 +34,11 @@ module.exports.loop = function () {
     defendRoom(spawn.room);
     // var creepConf = require('creep.configuration');
     // creepConf.refreshConfigurations(spawn.room);
-    const actions = require('room.actions');
-    if( ! spawn.room.memory.buildwalls)
-    {
-        actions.BUILD_FORTIFICATIONS(spawn.room);
-        spawn.room.memory.buildwalls = true;
-    }
+//     const actions = require('room.actions');
+//     if( ! spawn.room.memory.buildwalls)
+//     {
+//         actions.BUILD_FORTIFICATIONS(spawn.room);
+//         spawn.room.memory.buildwalls = true;
+//     }
     // destroyAllRampartsWalls(spawn.room);
 }
