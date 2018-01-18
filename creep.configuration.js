@@ -56,7 +56,7 @@ module.exports.refreshConfigurations = function(room)
     console.log( 'Refreshing blueprints, choosing config: ' +JSON.stringify(creepConfigurations[i]));
     for( var role in known_roles)
     {
-        var index = room.memory[known_roles[role]+'_index']);
+        var index = room.memory[known_roles[role]+'_index'];
         if( !index)
             index = 0;
         room.memory[known_roles[role]+'_configuration'] = creepConfigurations[i][known_roles[role]][index];
