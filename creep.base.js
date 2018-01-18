@@ -1,402 +1,312 @@
+/*
+ * Module code goes here. Use 'module.exports' to export things:
+ * module.exports.thing = 'a thing';
+ *
+ * You can import it from another modules like this:
+ * var mod = require('room.actions');
+ * mod.thing == 'a thing'; // true
+ */
+var helper = require('helper');
 
-module.exports = {}
-module.exports.collections = {};
-module.exports.destinations = {};
+module.exports = {};
 
-function getEnergyFromTarget(creep, target)
+module.exports.RESET_STATE_MACHINE = function(room)
 {
-    if( target instanceof Resource)
-    {
-        if(creep.pickup(target) == ERR_NOT_IN_RANGE)
-        {
-            creep.moveTo(target.pos, {visualizePathStyle: {stroke: '#ffaa00'}});
-        } 
-        return true;
-    } else if ( target instanceof Structure)
-    {
-        if(creep.withdraw(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-            creep.moveTo(target, {visualizePathStyle: {stroke: '#ffaa00'}});
-        }
-        return true;
-    }
-    else if( target instanceof Source)
-    {
-        if(creep.harvest(target) == ERR_NOT_IN_RANGE) {
-            creep.moveTo(target.pos, {visualizePathStyle: {stroke: '#ffaa00'}});
-        }
-        return true;
-    }
-    return false;
+    delete(room.memory.state_machine );
 }
 
-module.exports.repairList ={};
-
-
-module.exports.getCivilianRepairList = function(room)
+module.exports.INITIALIZE = function(room)
+{
+    console.log('Action INITIALIZE ('+room.name+')');
+    var spawns = room.find(FIND_MY_SPAWNS);
+    if( spawns.length )
     {
-        if( ! module.exports.repairList[room.name])
+        var sources = room.find(FIND_SOURCES);
+        var spawnController = require('creep.controller');
+        
+        spawnController.setDesiredForRole(room, 'miner', sources.length * 2);
+        spawnController.setDesiredForRole(room, 'builder', sources.length);     
+        spawnController.setDesiredForRole(room, 'upgrader', 0);
+        spawnController.setDesiredForRole(room, 'carrier', 0);
+        spawnController.setDesiredForRole(room, 'housekeeper', 2);
+        
+        var creepConf = require('creep.configuration');
+        creepConf.refreshConfigurations(room);
+        var spawn = spawns[0];
+        var dx;
+        var dy;
+        var source = spawn.pos.findClosestByPath(FIND_SOURCES);
+        if( source.pos.x >= spawn.pos.x)
         {
-            console.log('Recaclulating repair list');
-            var nonHealthyOwned = room.find(FIND_MY_STRUCTURES, {filter: 
-                (s)=> { 
-                return s.hits < s.hitsMax;}});
-            var nonHealthyCivilians = room.find(FIND_STRUCTURES, {filter: 
-                (s)=> { 
-                    if( s.structureType == STRUCTURE_RAMPART)
-                    {
-                        if( s.hits < RAMPART_DECAY_AMOUNT * 10)
-                        {
-                            return true;
-                        } 
-                            return false;
-                    }
-                    return (s.structureType != STRUCTURE_WALL && s.hits < s.hitsMax);}});
-            var allNonHealthy = nonHealthyOwned.concat(nonHealthyCivilians);
-            allNonHealthy = _.sortBy(allNonHealthy, (s)=> {
-                if( s.structureType == STRUCTURE_RAMPART)
-                {
-                    if( s.hits < RAMPART_DECAY_AMOUNT * 10)
-                    {
-                        return 0;
-                    }
-                    return (s.hits / s.hitsMax) +1;
-                } else 
-                return (s.hits / s.hitsMax + (( s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART ) ? 1: 0));
-                } );
-            console.log( 'Sorted list: ' + JSON.stringify( allNonHealthy));
-            module.exports.repairList[room.name] = allNonHealthy;
-        }
-        return module.exports.repairList[room.name];
-    }
-    
-module.exports.repair = function(creep)
-    {
-        if( !Object.keys(creep.memory.target).length)
-        {
-            var repList = module.exports.getCivilianRepairList(creep.room);
-            if( repList.length)
+            if( source.pos.y <= spawn.pos.y)
             {
-
-                var target = repList.shift();
-                creep.memory.target['REPAIR'] = target.id;
-                if(creep.repair(target) == ERR_NOT_IN_RANGE) 
-                {
-                    creep.moveTo(target);  
-                }
-                return true;
-            } 
-        }
-
-        if( creep.memory.target['REPAIR'])
-        {
-            var target = Game.getObjectById(creep.memory.target['REPAIR']);
-            if( target && target.hits < target.hitsMax)
+                room.memory.base_direction = TOP_RIGHT;
+                dx = 3;
+                dy = -3;
+            } else 
             {
-                if(creep.repair(target) == ERR_NOT_IN_RANGE) 
-                {
-                    creep.moveTo(target);  
-                }
-                return true;
+                room.memory.base_direction = BOTTOM_RIGHT;
+                dx = 3;
+                dy = 3;
             }
-            delete creep.memory.target['REPAIR'];
-            return true;
-        } 
-        return false;
-    }
-    
-module.exports.tryRenew = function(creep)
-    {
-        if( creep.memory.obsolete)
-            return;
-        var spawns = creep.pos.findInRange(FIND_MY_SPAWNS, 1);
-        if( spawns.length)
+        } else 
         {
-            var spawn = spawns[0];
-            if( !spawn.spawning)
+            if( source.pos.y <= spawn.pos.y)
             {
-                var extendTime = Math.floor(600/creep.body.length);
-                if( (1500 - creep.ticksToLive) >= extendTime)
-                {
-                    var myCost = creep.body.reduce(function (cost, part) {
-                                return cost + BODYPART_COST[part.type];
-                            }, 0);
-                    var renewEnergyCost = Math.ceil(myCost/2.5/creep.body.length);
-                    if( renewEnergyCost < spawn.energy)
-                    {
-                        console.log('Renewed creep '+ creep.name);
-                        spawn.renewCreep(creep);
-                    }
-                }
-                
+                room.memory.base_direction = TOP_LEFT;
+                dx = -3;
+                dy = -3;
+            } else 
+            {
+                room.memory.base_direction = BOTTOM_LEFT;
+                dx = -3;
+                dy = 3;
             }
         }
-    }
-module.exports.toggleMode = function(creep)
-    {
-        if(!creep.memory.collecting && creep.carry.energy == 0) {
-            creep.memory.collecting = true;
-            creep.say('⚡');
-            creep.memory.target = {};
-        }
-        if(creep.memory.collecting && creep.carry.energy == creep.carryCapacity) {
-            creep.memory.collecting = false;
-            creep.say('🚧');
-            creep.memory.target = {};
-        }
-    };
-    
-module.exports.collectEnergy = function(creep, target_types) {
-        if( creep.memory.target['COLLECT'])
-        {
-            var target = Game.getObjectById(creep.memory.target);
+        var baseX = spawn.pos.x + dx;
+        var baseY = spawn.pos.y + dy;
             
-            if( target)
-            {
-                return getEnergyFromTarget(creep,target);
-            }
-            delete creep.memory.target['COLLECT'];
-        } 
-        if( !Object.keys(creep.memory.target).length)
+        
+        room.createFlag(baseX, baseY, "Base1");
+    }
+};
+
+module.exports.PREPARE_SOURCES = function(room)
+{
+    console.log('Action: Prepare sources ('+room.name+')');
+        var sources = room.find(FIND_SOURCES);
+        var base = Game.flags['Base1'];
+        sources.sort((a,b) => base.pos.getRangeTo(a) - base.pos.getRangeTo(b));
+        var j = 1;
+        for( var i in sources )
         {
-            var target;
-            for( var i in target_types)
-            {
-                target = module.exports.collections[target_types[i]](creep);
-                if( target)
-                {
-                    break;
-                }
-            }
-            if( target)
-            {
-                creep.memory.target['COLLECT'] = target.id;
-                return getEnergyFromTarget(creep, target);
-            } 
+            var waypoints = room.findPath(
+                        base.pos,
+                        sources[i].pos,
+                        {ignoreCreeps: true} );
+            room.createFlag(waypoints[waypoints.length-2].x, waypoints[waypoints.length-2].y, 'Source'+(j++));
         }
-        return false;
-    };
+
+}
+
+module.exports.MINING_CONTAINERS = function(room)
+{
+    console.log('Action: Mining containers ('+room.name+')');
+    var flags = room.find(FIND_FLAGS, {filter: (flag)=> {return flag.name.startsWith('Source')}});
+    if( flags.length > 0)
+    {
+        for(var i in flags) {
+            console.log('Constructing new container at '+ flags[i].pos.x +'/'+flags[i].pos.y +' ('+flags[i].name+')');
+            helper.buildOverRoad(room, 
+                            flags[i].pos.x, flags[i].pos.y,
+                            STRUCTURE_CONTAINER );
+        }
+    }
+};
+
+module.exports.BASE_CONTAINER = function(room)
+{
+    var flag = Game.flags['Base1'];
+    helper.buildOverRoad(room, flag.pos.x, flag.pos.y, STRUCTURE_CONTAINER);
+}
+
+module.exports.CONNECT_ALL_SOURCES = function(room)
+{
+    var flags = room.find(FIND_FLAGS, {filter: (flag)=> {return flag.name.startsWith('Source')}});
+    var base = Game.flags['Base1'];
+
+    if( flags.length > 0)
+    {
+        for( var i in flags)
+        {
+            var waypoints = room.findPath(base.pos, flags[i].pos, {ignoreCreeps: true});
+            waypoints.forEach(
+                function(waypoint){
+                    room.createConstructionSite(
+                    waypoint.x,
+                    waypoint.y,
+                    STRUCTURE_ROAD );
+                });
+
+        }
+    }
+}
+
+module.exports.START_UPGRADING = function(room)
+{
+    var spawnController = require('creep.controller');
+    spawnController.setDesiredForRole(room, 'upgrader', 2);
+}
+
+module.exports.BUILD_CARRIERS = function(room)
+{
+    var spawnController = require('creep.controller');
+    spawnController.setDesiredForRole(room, 'carrier', room.memory.desired_miners);
+}
+
+module.exports.ACTION_MINING_DONE = function(spawn)
+{
     
-module.exports.deliverEnergy = function(creep, target_types) 
+    var containers = spawn.room.find(FIND_STRUCTURES, {filter: (structure)=>{return structure.structureType == STRUCTURE_CONTAINER}});
+    var waypoints = spawn.room.findPath(
+        containers[0].pos,
+        spawn.room.getPositionAt(spawn.pos.x + 6, spawn.pos.y),
+        {'ignoreCreeps': true} );
+    waypoints.forEach(
+        function(waypoint){
+            spawn.room.createConstructionSite(
+                waypoint.x,
+                waypoint.y,
+                STRUCTURE_ROAD );
+        });
+    spawn.memory.desired_upgraders = 1;
+    spawn.memory.desired_builders = 2;
+};
+
+module.exports.BUILD_EXTENSIONS = function(room)
+{
+    var layouter = require('room.layouter');
+    layouter.buildExtensions(room);
+};
+
+module.exports.REFRESH_BLUEPRINTS = function(room)
+{
+    var creepConf = require('creep.configuration');
+    creepConf.refreshConfigurations(room);
+};
+
+module.exports.BUILD_CONTROLLER_SUPPORT = function(room)
+{
+    var spawnController = require('creep.controller');
+    // spawnController.setDesiredForRole(room, 'carrier', room.memory.desired_carriers + 1);
+    
+    var base = Game.flags['Base1'];
+    
+    var waypoints = room.findPath(
+        room.controller.pos,
+        base.pos,
+        {ignoreCreeps: true} );
+        
+    helper.buildOverRoad(room, waypoints[1].x, waypoints[1].y, STRUCTURE_CONTAINER);
+    room.createFlag( waypoints[1].x, waypoints[1].y, "Controller1");
+    waypoints.splice(0,2);
+    waypoints.forEach(
+        function(waypoint){
+            room.createConstructionSite(
+                waypoint.x,
+                waypoint.y,
+                STRUCTURE_ROAD)
+        });
+}
+function buildOneElementInDirection( room, direction, pathSource, structureType, cachedCostMatrix)
+{
+
+    var exit = pathSource.findClosestByPath(direction,{ 
+        costCallback: function(roomName, costMatrix) {
+            if( roomName === room.name)
+                return cachedCostMatrix;
+        }});
+    if( ! exit)
     {
-        if( !Object.keys(creep.memory.target).length)
-        {
-            var target;
-            for( var i in target_types)
-            {
-                target = module.exports.destinations[target_types[i]](creep);
-                if( target)
-                {
-                    // console.log( 'Got target: ' + JSON.stringify( target) + ' from '+ target_types[i]);
-                    break;
-                }
-            }
-            if( target)
-            {
-                creep.memory.target['DELIVER'] = target.id;
-                if(creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(target, {visualizePathStyle: {stroke: '#ffffff'}});
-                }
-                return true;
-            }
-        }    
-        if( creep.memory.target['DELIVER'])
-        {
-            var target = Game.getObjectById(creep.memory.target);
-            // console.log('Delivering to target: '+ JSON.stringify(target));
-            if( target)
-            {
-                if(creep.transfer(target, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(target, {visualizePathStyle: {stroke: '#ffffff'}});
-                }
-                return true;
-            }
-            delete creep.memory.target['DELIVER'];
-            return true;
-        } 
         return false;
-    };
-
-
-
-
-module.exports.collections = {
-    COLLECT_GROUND: function(creep)
-    {
-        var target;
-        var droppedStuff = creep.room.find(FIND_DROPPED_RESOURCES, {filter: (s)=>{return s.resourceType == RESOURCE_ENERGY}});
-        if(droppedStuff.length)
-        {
-            droppedStuff = _.sortBy(droppedStuff, s => creep.pos.getRangeTo(s));
-            for( var i in droppedStuff)
-            {
-                if(droppedStuff[i].amount > creep.carryCapacity )
-                {
-                    target = droppedStuff[i];
-                    break;
-                }
-            }
-        }
-        return target;
-    },
-    COLLECT_MINING: function(creep)
-    {
-        var target;
-        var flags = creep.room.find(FIND_FLAGS);
-        var targets = [];
-        for( var i in flags)
-        {
-            if( flags[i].name.startsWith('Source'))
-            {
-                var look = flags[i].pos.look();
-                if( look.length)
-                {
-                    for( var j in look)
-                    {
-                        if( look[j].type == LOOK_STRUCTURES)
-                        {
-                            if(look[j][LOOK_STRUCTURES].structureType == STRUCTURE_CONTAINER)
-                            {
-                                var structure = look[j][LOOK_STRUCTURES];
-                                if( structure.store[RESOURCE_ENERGY] >= creep.carryCapacity)
-                                {
-                                    targets.push(structure);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        if( targets.length)
-        {
-            targets = _.sortBy(targets, (s) => s.store[RESOURCE_ENERGY]);
-            return targets[targets.length-1]; 
-        }
-        return null;
-    },
-    COLLECT_BASE: function(creep)
-    {
-        var target;
-        var flags = creep.room.find(FIND_FLAGS);
-        for( var i in flags)
-        {
-            if( flags[i].name.startsWith('Base'))
-            {
-                var look = flags[i].pos.look();
-                if( look.length)
-                {
-                    for( var j in look)
-                    {
-                        if( look[j].type == LOOK_STRUCTURES)
-                        {
-                            if(look[j][LOOK_STRUCTURES].structureType == STRUCTURE_CONTAINER)
-                            {
-                                var structure = look[j][LOOK_STRUCTURES];
-                                if( structure.store[RESOURCE_ENERGY] >= creep.carryCapacity)
-                                {
-                                    return structure;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return null;
-    },
-    COLLECT_SOURCE: function(creep)
-    {
-       return creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE); 
-    },
-    COLLECT_NEAREST_CONTAINER: function(creep)
-    {
-        var targets = creep.room.find(FIND_STRUCTURES, {
-        filter: (structure) => {
-            return (structure.structureType == STRUCTURE_CONTAINER ) && (structure.store[RESOURCE_ENERGY] >= creep.carryCapacity);
-            }
-        });
-        if( targets.length)
-        {
-            targets = _.sortBy(targets, (s) => creep.pos.getRangeTo(s));
-            return targets[0]; 
-        }
-        return null;
     }
-};
-
-module.exports.destinations = {
-    DESTINATION_SPAWN: function(creep)
-    {
-        var targets = creep.room.find(FIND_STRUCTURES, {
-        filter: (structure) => {
-            return (structure.structureType == STRUCTURE_EXTENSION ||
-                structure.structureType == STRUCTURE_SPAWN
-                // || structure.structureType == STRUCTURE_TOWER 
-                ) && (structure.energy < structure.energyCapacity);
-            }
-        });
-        if( targets.length)
+    console.log( 'Exit position found: '+ JSON.stringify(exit) );
+    var pathFromExitToSpawn = exit.findPathTo(pathSource, {costCallback: function( roomName, costMatrix) {
+        if( roomName === room.name)
         {
-            targets = _.sortBy(targets, (s) => creep.pos.getRangeTo(s));
-            return targets[0]; 
-        }
-        return null;
-    },
-    DESTINATION_BASE: function(creep)
-    {
-        var target;
-        var flags = creep.room.find(FIND_FLAGS);
-        for( var i in flags)
+            return cachedCostMatrix;
+        } else 
         {
-            if( flags[i].name.startsWith('Base'))
+            console.log( 'Cost matrix requested for different room! '+roomName );
+            return costMatrix;
+        }}});
+        
+    if( pathFromExitToSpawn.length)
+    {
+        for( var i in pathFromExitToSpawn)
+        {
+            var look = pathFromExitToSpawn[i].lookFor(LOOK_STRUCTURES);
+            if( look && look.length)
             {
-                var look = flags[i].pos.look();
-                if( look.length)
-                {
-                    for( var j in look)
-                    {
-                        if( look[j].type == LOOK_STRUCTURES)
-                        {
-                            if(look[j][LOOK_STRUCTURES].structureType == STRUCTURE_CONTAINER || look[j][LOOK_STRUCTURES.structureType == STRUCTURE_STORAGE])
-                            {
-                                var structure = look[j][LOOK_STRUCTURES];
-                                if( structure.store[RESOURCE_ENERGY] < structure.storeCapacity)
-                                {
-                                    return structure;
-                                }
-                            }
-                        }
-                    }
-                }
+                continue;
+            }
+            look = pathFromExitToSpawn[i].lookFor(LOOK_CONSTRUCTION_SITES);
+            if( look && look.length)
+            {
+                continue;
+            }
+            
+            var status = room.createConstructionSite( pathFromExitToSpawn[i].x, pathFromExitToSpawn[i].y, structureType);
+            if( status == OK)
+            {
+                console.log( 'Built ' +structureType +' at '+ pathFromExitToSpawn[i].x + '/'+ pathFromExitToSpawn[i].y);
+                cachedCostMatrix.set( pathFromExitToSpawn[i].x, pathFromExitToSpawn[i].y, 255);
+                return true;
+                break;
+            } else if ( status == ERR_INVALID_TARGET)
+            {
+                console.log('Wall building invalid target:  ' +  pathFromExitToSpawn[i].x + '/'+ pathFromExitToSpawn[i].y);
+                continue;
+            } else if( status == ERR_INVALID_ARGS)
+            {
+                console.log('Wall building invalid args:  ' +  pathFromExitToSpawn[i].x + '/'+ pathFromExitToSpawn[i].y);
+                continue;
+            } else
+            {
+                return false;
             }
         }
-        return null;
-    },
-    DESTINATION_ANY_CONTAINER: function(creep)
-    {
-        var allStructures = creep.room.find(FIND_STRUCTURES, {
-        filter: (structure) => {
-            return (structure.structureType == STRUCTURE_CONTAINER ) && (structure.store[RESOURCE_ENERGY] < structure.storeCapacity);
-            }
-        });
-        allStructures = allStructures.filter( (s) => {
-            var flag = s.pos.lookFor(LOOK_FLAGS);
-            return(flag && !flag[0].name.startsWith('Source'));
-        });
-        var targets = allStructures.filter((s) => { s.store[RESOURCE_ENERGY] < 0.25* s.storeCapacity} );
-        if( ! targets.length)
-            targets = allStructures.filter((s) => { s.store[RESOURCE_ENERGY] < 0.5* s.storeCapacity} );
-        if( ! targets.length)
-            targets = allStructures.filter((s) => { s.store[RESOURCE_ENERGY] < 0.75* s.storeCapacity} );
-        if( ! targets.length)
-            targets = allStructures;
-        if( targets.length)
-        {
-            targets = _.sortBy(targets, (s) => creep.pos.getRangeTo(s));
-            return targets[0]; 
-        }
-        return null;
+    } else 
+        return false;
 
+}
+
+module.exports.USE_STATIONARY_UPGRADER = function(room)
+{
+    room.memory['upgrader_index'] = 1;
+}
+
+module.exports.BUILD_TOWER = function(room)
+{
+    var flag = Game.flags['Base1'];
+    room.createConstructionSite(flag.pos.x + 2, flag.pos.y, STRUCTURE_TOWER);
+}
+
+module.exports.BUILD_RAMPARTS = function( room)
+{
+    var flag = Game.flags['Base1'];
+    room.createConstructionSite(flag.pos.x + 2, flag.pos.y, STRUCTURE_RAMPART);
+}
+
+module.exports.BUILD_FORTIFICATIONS = function(room)
+{
+    let cachedCostMatrix = new PathFinder.CostMatrix;
+    var wall_construction = room.find(FIND_MY_CONSTRUCTION_SITES, {filter:(s) => {
+        return (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)}});
+                    wall_construction.forEach( wall => {
+                       cachedCostMatrix.set(wall.pos.x, wall.pos.y, 255) });
+    var spawn = room.find(FIND_MY_SPAWNS)[0];
+    buildOneElementInDirection( room, FIND_EXIT_TOP, spawn.pos, STRUCTURE_RAMPART, cachedCostMatrix);
+    buildOneElementInDirection( room, FIND_EXIT_RIGHT, spawn.pos, STRUCTURE_RAMPART, cachedCostMatrix);
+    buildOneElementInDirection( room, FIND_EXIT_BOTTOM, spawn.pos, STRUCTURE_RAMPART, cachedCostMatrix);
+    buildOneElementInDirection( room, FIND_EXIT_LEFT, spawn.pos, STRUCTURE_RAMPART, cachedCostMatrix);
+
+}
+
+module.exports.BUILD_WALLS = function(room)
+{
+    let cachedCostMatrix = new PathFinder.CostMatrix;
+    var wall_construction = room.find(FIND_MY_CONSTRUCTION_SITES, {filter:(s) => {
+        return (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)}});
+                    wall_construction.forEach( wall => {
+                       cachedCostMatrix.set(wall.pos.x, wall.pos.y, 255) });
+    var spawn = room.find(FIND_MY_SPAWNS)[0];
+    for( var i = 0; i < 50; i++)
+    {
+        buildOneElementInDirection( room, FIND_EXIT_TOP, spawn.pos, STRUCTURE_WALL, cachedCostMatrix);
+        buildOneElementInDirection( room, FIND_EXIT_RIGHT, spawn.pos, STRUCTURE_WALL, cachedCostMatrix);
+        buildOneElementInDirection( room, FIND_EXIT_BOTTOM, spawn.pos, STRUCTURE_WALL, cachedCostMatrix);
+        buildOneElementInDirection( room, FIND_EXIT_LEFT, spawn.pos, STRUCTURE_WALL, cachedCostMatrix);
     }
-};
+
+}
