@@ -26,7 +26,7 @@ module.exports = {
                     } else if( look[i][LOOK_STRUCTURES].structureType == type)
                     {
                         console.log('Tried to build '+type+' at '+pos.x+'/'+pos.y+ ', but it already exists!');
-                        return OK;
+                        return ERR_INVALID_TARGET;
                     } else 
                     {
                         console.log('Tried to build '+type+' at '+pos.x+'/'+pos.y+ ', but a '+look[i][LOOK_STRUCTURES].structureType+' blocks the position!');
@@ -41,7 +41,7 @@ module.exports = {
                     } else if( look[i][LOOK_CONSTRUCTION_SITES].structureType == type)
                     {
                         console.log('Tried to build '+type+' at '+pos.x+'/'+pos.y+ ', but it is already in progress!');
-                        return OK;
+                        return ERR_INVALID_TARGET;
                     } else 
                     {
                         console.log('Tried to build '+type+' at '+pos.x+'/'+pos.y+ ', but a '+look[i][LOOK_CONSTRUCTION_SITES].structureType+' construction site blocks the position!');
@@ -52,5 +52,12 @@ module.exports = {
             }
         }
         return room.createConstructionSite(pos, type);
+    },
+    destroyConstruction: function( room)
+    {
+    var blueprints = room.find( FIND_MY_CONSTRUCTION_SITES);
+    blueprints.forEach((s) => s.remove());
+
     }
+
 };

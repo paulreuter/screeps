@@ -18,7 +18,6 @@ var roleBuilder = {
         if( ! creep.memory.target['BUILD'])
         {
             var targets = creep.room.find(FIND_CONSTRUCTION_SITES);
-            // console.log(creep.name + ' has these targets: '+ JSON.stringify(targets));
             if(targets.length > 0 ) {
                 targets.sort((a,b) => creep.pos.getRangeTo(a) - creep.pos.getRangeTo(b));
                 creep.memory.target['BUILD'] = targets[0].id;
@@ -26,7 +25,7 @@ var roleBuilder = {
                     creep.moveTo(targets[0], {visualizePathStyle: {stroke: '#ffffff'}});
                 }
                 return true;
-            } 
+            }
             return false;
         }
     },
@@ -41,10 +40,10 @@ var roleBuilder = {
             // console.log( 'builder '+ creep.name + ' is working');
             if( roleBuilder.build(creep))
                 return;
-            // console.log( 'builder '+ creep.name + ' did not find something to build, is repairing instead');                
             if( base.repair(creep))
                 return;
-            base.deliverEnergy(creep, ['DESTINATION_SPAWN', 'DESTINATION_BASE']);
+            // if( require('room.repair').increaseFortificationStrength(creep))
+            //     return;
         }
     }
 };

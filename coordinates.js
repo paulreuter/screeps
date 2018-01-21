@@ -16,7 +16,8 @@ module.exports = {
     {
         if( dir%2 != 1)
         {
-            console.log('Tried to rotate to diagonal, check results!');    
+            console.log('Tried to rotate to diagonal, check results!');
+            dir = dir -1;
         }
         var newX = offset.x+ xtransform[(dir-1)]* x + xtransform[dir]*y;
         var newY = offset.y + ytransform[dir-1]* x + ytransform[dir]*y;

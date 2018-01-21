@@ -12,8 +12,7 @@ var roleHousekeeper = {
             
             if( base.deliverEnergy(creep, ['DESTINATION_SPAWN']))
             {
-                // check if adjacent to spawn and extend life
-                base.tryRenew(creep);
+                base.renew(creep);
                 return;
             }
             if( base.repair(creep))

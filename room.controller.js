@@ -36,7 +36,7 @@ const state_machine = {
                 next_state:'EXTENSION_TWO'}],
             EXTENSION_TWO: [{
                 conditions: ['FIVE_EXTENSIONS_BUILT'],
-                actions: ['REFRESH_BLUEPRINTS','BUILD_CONTROLLER_SUPPORT'], 
+                actions: ['REFRESH_BLUEPRINTS', 'USE_ONE_MINER_PER_SOURCE','BUILD_CONTROLLER_SUPPORT'], 
                 next_state: 'CONTROLLER' }],
             CONTROLLER: [{
                 conditions: ['ALL_CONSTRUCTION_DONE'], 
@@ -44,7 +44,7 @@ const state_machine = {
                 next_state: 'BUILD_FORTIFICATIONS' }],
             BUILD_FORTIFICATIONS: [{
                 conditions: ['ALL_CONSTRUCTION_DONE', 'ALL_RAMPARTS_HEALTHY'],
-                actions: ['BUILD_NEXT_RAMPART']},{
+                actions: ['BUILD_NEXT_EXIT_RAMPART']},{
                 conditions: ['ALL_CONSTRUCTION_DONE', 'ALL_RAMPARTS_HEALTHY', 'ALL_EXITS_HAVE_RAMPARTS'],
                 actions: ['BUILD_WALLS'],
                 next_state: 'RCL_THREE'}],
@@ -55,22 +55,27 @@ const state_machine = {
             EXTENSION_THREE: [{
                 conditions: ['ALL_CONSTRUCTION_DONE'],
                 actions:['REFRESH_BLUEPRINTS'],
+                next_state:'RCL_FOUR'}],
+            RCL_FOUR: [{
+                conditions: ['RCL_LEVEL_FOUR'],
+                actions: ['BUILD_EXTENSIONS','BUILD_STORAGE'],
+                next_state:'EXTENSION_FOUR'}],
+            EXTENSION_FOUR: [{
+                conditions: ['ALL_CONSTRUCTION_DONE'],
+                actions:['REFRESH_BLUEPRINTS'],
                 next_state:'WAIT'}],
-            WAIT: [{
-                conditions: ['MOSTLY_FALSE'],
-                actions:['RESET_STATE_MACHINE'],
-                next_state:'WAIT'}]
+            WAIT: [{}]
     };
 
 function evaluateState(room) {
     if( !room.memory.state ) 
     {
-    // actions.INITIALIZE(spawn);
         console.log('Room state not yet set, switching to STATE_UNINITIALIZED');
         room.memory.state = 'UNINITIALIZED';
     }
     if( Game.time % 1 == 0)
     {
+        
         var stateTransfers = state_machine[room.memory.state];
         for( var i in stateTransfers)
         {

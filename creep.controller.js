@@ -73,6 +73,7 @@ module.exports = {
             var creep = Game.creeps[name];
             known_roles[creep.memory.role].run(creep);
         }
+        
         var totalCreeps = Object.keys(Game.creeps).length;
         // console.log('checking creeps: '+totalCreeps + '/'+ room.memory.desired_total);
         if( totalCreeps < room.memory.desired_total)
@@ -80,10 +81,8 @@ module.exports = {
             for(var name in Memory.creeps) {
                 if(!Game.creeps[name]) {
                     delete Memory.creeps[name];
-                    // console.log('Clearing non-existing creep memory:', name);
                 }
             }
-            // console.log( 'checking energy levels: '+room.energyAvailable+ '/'+room.energyCapacityAvailable);
             if( room.energyAvailable == room.energyCapacityAvailable)
             {
                 for( var i in known_roles)

@@ -12,6 +12,7 @@ function defendRoom(room) {
     }
 }
 
+
 function destroyAllRampartsWalls(room)
 {
     var structures = room.find(FIND_STRUCTURES, {filter: (s)=> {return (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)}});
@@ -21,28 +22,15 @@ function destroyAllRampartsWalls(room)
 }
 
 module.exports.loop = function () {
-    // var bodyToTest = Game.creeps['carrier 114363'].body.map( (s) =>{ return s.type});
-    // console.log( JSON.stringify(bodyToTest));
-    // var referenceBody = [ CARRY, CARRY, CARRY, MOVE, MOVE, MOVE];
-    // console.log( JSON.stringify(referenceBody));
-    // console.log( JSON.stringify(bodyToTest) === JSON.stringify(referenceBody));
-    
+
     var spawn = Game.spawns['Spawn1'];
-    // findExit( spawn);
     creepController.run(spawn);
     roomController.run(spawn.room);
     defendRoom(spawn.room);
-    var base = require('creep.base');
-    base.resetRepairList(spawn.room);
-    var list = base.getCivilianRepairList(spawn.room);
-    console.log( Game.time + ': this tick we had '+list.length + 'repair targets');
-    // var creepConf = require('creep.configuration');
-    // creepConf.refreshConfigurations(spawn.room);
-    // const actions = require('room.actions');
-    // if( ! spawn.room.memory.buildwalls)
-    // {
-    //     actions.BUILD_FORTIFICATIONS(spawn.room);
-    //     spawn.room.memory.buildwalls = true;
-    // }
-    // destroyAllRampartsWalls(spawn.room);
+    
+    // var exit = spawn.pos.findClosestByPath(FIND_EXIT_RIGHT, {ignoreCreeps: true});
+    // console.log( 'Found exit '+JSON.stringify(exit));
+    // var existingRamparts = exit.findInRange( FIND_STRUCTURES, 100,{filter:(s) => { return s.structureType == STRUCTURE_RAMPART}});
+    // console.log( 'result of search:' + JSON.stringify(existingRamparts));
+
 }

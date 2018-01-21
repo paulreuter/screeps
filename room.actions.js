@@ -32,42 +32,12 @@ module.exports.INITIALIZE = function(room)
         
         var creepConf = require('creep.configuration');
         creepConf.refreshConfigurations(room);
-        var spawn = spawns[0];
-        var dx;
-        var dy;
-        var source = spawn.pos.findClosestByPath(FIND_SOURCES);
-        if( source.pos.x >= spawn.pos.x)
-        {
-            if( source.pos.y <= spawn.pos.y)
-            {
-                room.memory.base_direction = TOP_RIGHT;
-                dx = 3;
-                dy = -3;
-            } else 
-            {
-                room.memory.base_direction = BOTTOM_RIGHT;
-                dx = 3;
-                dy = 3;
-            }
-        } else 
-        {
-            if( source.pos.y <= spawn.pos.y)
-            {
-                room.memory.base_direction = TOP_LEFT;
-                dx = -3;
-                dy = -3;
-            } else 
-            {
-                room.memory.base_direction = BOTTOM_LEFT;
-                dx = -3;
-                dy = 3;
-            }
-        }
-        var baseX = spawn.pos.x + dx;
-        var baseY = spawn.pos.y + dy;
-            
+ 
+        let layout = require('room.layouter');
+        layout.seedBase(room);
         
-        room.createFlag(baseX, baseY, "Base1");
+        let repair = require('room.repair');
+        repair.increaseFortificationStrength(room);
     }
 };
 
@@ -205,7 +175,7 @@ function buildOneElementInDirection( room, direction, pathSource, structureType,
         costCallback: function(roomName, costMatrix) {
             if( roomName === room.name)
                 return cachedCostMatrix;
-        }});
+        },ignoreCreeps:true});
     console.log( 'Exit position found: '+ JSON.stringify(exit) );
     if( ! exit)
     {
@@ -213,7 +183,7 @@ function buildOneElementInDirection( room, direction, pathSource, structureType,
     }
     var pathFromExitToSpawn = exit.findPathTo(pathSource, {costCallback: function( roomName, costMatrix) {
         if( roomName === room.name)
-            return cachedCostMatrix}});
+            return cachedCostMatrix},ignoreCreeps: true});
     if( pathFromExitToSpawn.length)
     {
         for( var i in pathFromExitToSpawn)
@@ -243,6 +213,13 @@ function buildOneElementInDirection( room, direction, pathSource, structureType,
 
 }
 
+module.exports.USE_ONE_MINER_PER_SOURCE = function(room)
+{
+    let sources = room.find(FIND_SOURCES);
+    let cc = require('creep.controller');
+    cc.setDesiredForRole(room, 'miner', sources.length);
+}
+
 module.exports.USE_STATIONARY_UPGRADER = function(room)
 {
     room.memory['upgrader_index'] = 1;
@@ -260,7 +237,7 @@ module.exports.BUILD_RAMPARTS = function( room)
     room.createConstructionSite(flag.pos.x + 2, flag.pos.y, STRUCTURE_RAMPART);
 }
 
-module.exports.BUILD_FORTIFICATIONS = function(room)
+module.exports.BUILD_NEXT_EXIT_RAMPART = function(room)
 {
     let cachedCostMatrix = new PathFinder.CostMatrix;
     var structures = room.find(FIND_STRUCTURES);
@@ -272,10 +249,38 @@ module.exports.BUILD_FORTIFICATIONS = function(room)
                        cachedCostMatrix.set(wall.pos.x, wall.pos.y, 255) });
                      
     var spawn = room.find(FIND_MY_SPAWNS)[0];
-    buildOneElementInDirection( room, FIND_EXIT_TOP, spawn.pos, STRUCTURE_RAMPART, cachedCostMatrix);
-    buildOneElementInDirection( room, FIND_EXIT_RIGHT, spawn.pos, STRUCTURE_RAMPART, cachedCostMatrix);
-    buildOneElementInDirection( room, FIND_EXIT_BOTTOM, spawn.pos, STRUCTURE_RAMPART, cachedCostMatrix);
-    buildOneElementInDirection( room, FIND_EXIT_LEFT, spawn.pos, STRUCTURE_RAMPART, cachedCostMatrix);
+    var directions = [ FIND_EXIT_RIGHT, FIND_EXIT_TOP, FIND_EXIT_BOTTOM,FIND_EXIT_LEFT];
+    for( var i in directions )
+    {
+        // console.log( 'Trying direction '+ directions[i]+ ' from '+ JSON.stringify(spawn.pos));
+        var exit = spawn.pos.findClosestByPath(directions[i],{ 
+        costCallback: function(roomName, costMatrix) {
+            if( roomName === room.name)
+                return cachedCostMatrix;
+        }, ignoreCreeps:true});
+        if( ! exit)
+            continue;
+        // console.log( 'Found exit '+JSON.stringify(exit));
+        var existingRamparts = exit.findInRange( FIND_STRUCTURES, 4,{filter:(s) => { return s.structureType == STRUCTURE_RAMPART}});
+        //console.log( 'Found: ' + JSON.stringify(existingRamparts));
+        if( existingRamparts.length )
+            continue;
+        return buildOneElementInDirection( room, directions[i], spawn.pos, STRUCTURE_RAMPART, cachedCostMatrix);
+    }
+}
+
+module.exports.BUILD_WALLS = function(room)
+{
+    let cachedCostMatrix = new PathFinder.CostMatrix;
+    var structures = room.find(FIND_STRUCTURES);
+    var wall_construction = room.find(FIND_MY_CONSTRUCTION_SITES, {filter:(s) => {
+        return (s.structureType == STRUCTURE_WALL || s.structureType == STRUCTURE_RAMPART)}});
+    wall_construction.forEach( wall => {
+                       cachedCostMatrix.set(wall.pos.x, wall.pos.y, 255) });
+    structures.forEach( wall => {
+                       cachedCostMatrix.set(wall.pos.x, wall.pos.y, 255) });
+                     
+    var spawn = room.find(FIND_MY_SPAWNS)[0];
     for( var i = 0; i < 50; i++)
     {
         buildOneElementInDirection( room, FIND_EXIT_TOP, spawn.pos, STRUCTURE_WALL, cachedCostMatrix);
@@ -283,4 +288,13 @@ module.exports.BUILD_FORTIFICATIONS = function(room)
         buildOneElementInDirection( room, FIND_EXIT_BOTTOM, spawn.pos, STRUCTURE_WALL, cachedCostMatrix);
         buildOneElementInDirection( room, FIND_EXIT_LEFT, spawn.pos, STRUCTURE_WALL, cachedCostMatrix);
     }
+}
+
+module.exports.BUILD_STORAGE = function(room)
+{
+    var flag = Game.flags['Base1'];
+    let coordinates = require('coordinates');
+    let pos = coordinates.getRotatedCoordinates( flag.pos, 1,-1, room.memory.base_direction);
+    room.createConstructionSite(pos, STRUCTURE_STORAGE );
+    
 }

@@ -29,52 +29,10 @@ function getEnergyFromTarget(creep, target)
     return false;
 }
 
-module.exports.repairList = {};
 
-module.exports.resetRepairList =function(room)
-    {
-        delete module.exports.repairList[room.name];
-    }
-
-module.exports.getCivilianRepairList = function(room)
-    {
-        if( !(module.exports.repairList && module.exports.repairList[room.name]))
-        {
-            console.log('Calculating repair list for tick '+ Game.time);
-            var nonHealthyOwned = room.find(FIND_MY_STRUCTURES, {filter: 
-                (s)=> { 
-                    return s.hits < s.hitsMax;}});
-            var nonHealthyCivilians = room.find(FIND_STRUCTURES, {filter: 
-                (s)=> { 
-                    // console.log( 'Filtering: '+ JSON.stringify(s));
-                    if( s.structureType == STRUCTURE_RAMPART)
-                    {
-                        if( s.hits < RAMPART_DECAY_AMOUNT * 10)
-                        {
-                            // console.log( 'true (' + s.hits + '/'+RAMPART_DECAY_AMOUNT);
-                            return true;
-                        } 
-                        // console.log( 'false');
-                        return false;
-                    }
-                    // console.log( s.structureType == STRUCTURE_WALL ? s.hits < room.memory.wallhp : s.hits < s.hitsMax);
-                    return (s.structureType == STRUCTURE_WALL ? s.hits < room.memory.wallhp : s.hits < s.hitsMax);}});
-            var allNonHealthy = nonHealthyCivilians.concat(nonHealthyOwned);
-            allNonHealthy = _.sortBy(allNonHealthy, (s)=> {
-                return (s.hits / s.hitsMax);
-                } );
-            if( ! module.exports.repairList)
-            {
-                console.log( 'repairlist was cleared');
-                module.exports.repairList = {};
-            }
-            module.exports.repairList[room.name] = allNonHealthy;
-        } 
-        return module.exports.repairList[room.name];
-    }
-    
 module.exports.repair = function(creep)
     {
+        
         if( creep.memory.target['REPAIR'])
         {
             var target = Game.getObjectById(creep.memory.target['REPAIR']);
@@ -82,7 +40,7 @@ module.exports.repair = function(creep)
             {
                 if(creep.repair(target) == ERR_NOT_IN_RANGE) 
                 {
-                    creep.moveTo(target);  
+                    creep.moveTo(target, {visualizePathStyle: {stroke: '#ffaa00'}});  
                 }
                 return true;
             }
@@ -90,57 +48,80 @@ module.exports.repair = function(creep)
         } 
         if( ! creep.memory.target['REPAIR'])
         {
-            var repList = module.exports.getCivilianRepairList(creep.room);
+            let repair = require('room.repair');
+            var repList = repair.getCivilianRepairList(creep.room);
             if( repList.length)
             {
 
-                var target = repList.shift();
-                creep.memory.target['REPAIR'] = target.id;
-                if(creep.repair(target) == ERR_NOT_IN_RANGE) 
+                var targetID = repList.shift();
+                var target = Game.getObjectById(targetID);
+                if( target)
                 {
-                    creep.moveTo(target);  
+                    creep.memory.target['REPAIR'] = targetID;
+                    
+                    if(creep.repair(target) == ERR_NOT_IN_RANGE) 
+                    {
+                        creep.moveTo(target);  
+                    }
+                    return true;
                 }
-                return true;
             } 
         }
         return false;
     }
     
-module.exports.tryRenew = function(creep)
+module.exports.renew = function(creep)
     {
         if( creep.memory.obsolete)
-            return;
-        var spawns = creep.pos.findInRange(FIND_MY_SPAWNS, 1);
-        if( spawns.length)
+            return false;
+        if( creep.room.energyAvailable + creep.carry[RESOURCE_ENERGY] < creep.room.energyCapacityAvailable)
+            return false;
+        var myCost = creep.body.reduce(function (cost, part) {
+            return cost + BODYPART_COST[part.type];
+            }, 0);
+        var renewEnergyCost = Math.ceil(myCost/2.5/creep.body.length);
+
+        if( Math.min(renewEnergyCost, creep.carryCapacity) <= creep.carry[RESOURCE_ENERGY])
         {
-            var spawn = spawns[0];
-            if( !spawn.spawning)
+            var spawn = creep.pos.findClosestByRange(FIND_MY_SPAWNS);
+            if( spawn)
             {
-                var extendTime = Math.floor(600/creep.body.length);
-                if( (1500 - creep.ticksToLive) >= extendTime)
+                if( !spawn.spawning)
                 {
-                    var myCost = creep.body.reduce(function (cost, part) {
-                                return cost + BODYPART_COST[part.type];
-                            }, 0);
-                    var renewEnergyCost = Math.ceil(myCost/2.5/creep.body.length);
-                    if( renewEnergyCost < spawn.energy)
+                    var extendTime = Math.floor(600/creep.body.length);
+                    if( (1500 - creep.ticksToLive) >= extendTime)
                     {
-                        console.log('Renewed creep '+ creep.name);
-                        spawn.renewCreep(creep);
+                        
+                        if( renewEnergyCost < spawn.energy)
+                        {
+                            var status = spawn.renewCreep(creep);
+                            if( status == OK)
+                            {
+                                creep.transfer(spawn, RESOURCE_ENERGY);
+                                return true;
+                            } else if ( status = ERR_NOT_IN_RANGE)
+                            {
+                                creep.moveTo(spawn, {visualizePathStyle: {stroke: '#ffffff'}});
+                                return true;
+                            } else {
+                                console.log( 'Tried renewing, status is: '+status);
+                            }
+                        }
                     }
+                    
                 }
-                
             }
         }
+        return false;
     }
-module.exports.toggleMode = function(creep)
+module.exports.toggleMode = function(creep, force)
     {
-        if(!creep.memory.collecting && creep.carry.energy == 0) {
+        if(!creep.memory.collecting && (creep.carry.energy == 0 || force)) {
             creep.memory.collecting = true;
             creep.say('⚡');
             creep.memory.target = {};
         }
-        if(creep.memory.collecting && creep.carry.energy == creep.carryCapacity) {
+        if(creep.memory.collecting && (creep.carry.energy == creep.carryCapacity || force)) {
             creep.memory.collecting = false;
             creep.say('🚧');
             creep.memory.target = {};
@@ -279,6 +260,13 @@ module.exports.collections = {
     COLLECT_BASE: function(creep)
     {
         var target;
+        if( creep.room.storage)
+        {
+            if( creep.room.storage.store[RESOURCE_ENERGY] >= creep.carryCapacity - creep.carry[RESOURCE_ENERGY])
+            {
+                return creep.room.storage;
+            }
+        }
         var flags = creep.room.find(FIND_FLAGS);
         for( var i in flags)
         {
@@ -344,6 +332,21 @@ module.exports.destinations = {
         }
         return null;
     },
+    DESTINATION_TOWER: function(creep)
+    {
+        var targets = creep.room.find(FIND_STRUCTURES, {
+        filter: (structure) => {
+            return ( structure.structureType == STRUCTURE_TOWER 
+                ) && (structure.energy < structure.energyCapacity);
+            }
+        });
+        if( targets.length)
+        {
+            targets = _.sortBy(targets, (s) => creep.pos.getRangeTo(s));
+            return targets[0]; 
+        }
+        return null;
+    },
     DESTINATION_BASE: function(creep)
     {
         var target;
@@ -364,16 +367,26 @@ module.exports.destinations = {
                                 var structure = look[j][LOOK_STRUCTURES];
                                 if( structure.store[RESOURCE_ENERGY] < structure.storeCapacity)
                                 {
-                                    return structure;
+                                    target = structure;
+                                    break;
                                 }
                             }
                         }
                     }
+                break;
                 }
             }
         }
+        if( target)
+        {
+            return target;
+        } else if( creep.room.storage)
+        {
+            return creep.room.storage;
+        }
         return null;
     },
+    
     DESTINATION_ANY_CONTAINER: function(creep)
     {
         var allStructures = creep.room.find(FIND_STRUCTURES, {

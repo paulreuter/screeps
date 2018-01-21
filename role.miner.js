@@ -42,19 +42,38 @@ var roleMiner = {
         }
         
         var source = Game.getObjectById(desiredSource);
-            
-        if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
-            // creep.moveTo(source, {visualizePathStyle: {stroke: '#ffaa00'}});
-            creep.moveTo(Game.flags[creep.memory.flag], {visualizePathStyle: {stroke: '#ffaa00'}});
-            const occupier = Game.flags[creep.memory.flag].pos.lookFor(LOOK_CREEPS);
-            if( occupier.length)
+        if( !creep.memory.comfy)
+        {
+            let flag = Game.flags[creep.memory.flag];
+            if( creep.pos.inRangeTo(flag.pos, 0))
+                creep.memory.comfy = true;
+            else
             {
-                if( occupier[0] != creep && occupier[0].memory.role == 'miner')
+                const occupier = flag.pos.lookFor(LOOK_CREEPS);
+                if( occupier.length)
                 {
-                    creep.moveTo(source,{visualizePathStyle: {stroke: '#ffaa00'}} );
+                    if( occupier[0] != creep && occupier[0].memory.role == 'miner')
+                    {
+                        if( creep.pos.isNearTo(source))
+                        {
+                            creep.memory.comfy=true;
+                        } else
+                        {
+                            creep.moveTo(source,{visualizePathStyle: {stroke: '#ffaa00'}} );
+                            return;
+                        }
+                    }
+                } else {
+                    creep.moveTo(flag, {visualizePathStyle: {stroke: '#ffaa00'}});
+                    return;
                 }
+                
             }
-        } 
+
+        }
+        creep.harvest(source);
+        return;
+    
     }
 };
 
