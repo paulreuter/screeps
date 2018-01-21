@@ -90,11 +90,12 @@ module.exports = {
                     if( wantToBuild(spawn, i))
                         break;
                 }
+            }  
+            if ( totalCreeps == 0)
+            {
+                // emergency spawning needed
+                spawn.createSpawn([WORK,CARRY, CARRY, MOVE, MOVE], 'housekeeper emergency', {memory:{role:'housekeeper', obsolete:true}});
             }
-        } else if ( totalCreeps == 0)
-        {
-            // emergency spawning needed
-            spawn.createSpawn([WORK,CARRY, CARRY, MOVE, MOVE], 'housekeeper emergency', {memory:{role:'housekeeper', obsolete:true}});
         }
         if(spawn.spawning) {
             var spawningCreep = Game.creeps[spawn.spawning.name];
