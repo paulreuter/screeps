@@ -94,7 +94,7 @@ module.exports = {
             if ( totalCreeps == 0)
             {
                 // emergency spawning needed
-                spawn.createSpawn([WORK,CARRY, CARRY, MOVE, MOVE], 'housekeeper emergency', {memory:{role:'housekeeper', obsolete:true}});
+                spawn.spawnCreep([WORK,CARRY, CARRY, MOVE, MOVE], 'housekeeper emergency', {memory:{role:'housekeeper', obsolete:true}});
             }
         }
         if(spawn.spawning) {
