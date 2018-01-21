@@ -16,6 +16,8 @@ module.exports.recalculateRepairList = function(room)
 {
     var nonHealthyOwned = room.find(FIND_MY_STRUCTURES, {filter: 
         (s)=> { 
+            if( s.structureType == STRUCTURE_RAMPART)
+                    return s.hits < room.memory.ramparthp;
             return s.hits < s.hitsMax;}});
     if( ! nonHealthyOwned)
         nonHealthyOwned = [];
@@ -40,7 +42,7 @@ module.exports.recalculateRepairList = function(room)
                 return 0;
             return s.hits / room.memory.ramparthp + 1;
         }
-        return s.hits < s.hitsMax;
+        return s.hits / s.hitsMax;
         } );
     // outputList( allNonHealthy);
     room.memory.repair = {};
