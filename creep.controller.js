@@ -5,16 +5,16 @@ var roleBuilder = require('role.builder');
 var roleMiner = require('role.miner');
 var roleHousekeeper = require('role.housekeeper');
 var roleUpgrader = require('role.upgrader');
+var roleConduit = require('role.conduit');
 
 const known_roles = {
     housekeeper: roleHousekeeper,
     miner: roleMiner,
     builder: roleBuilder,
     upgrader: roleUpgrader,
-    carrier: roleCarrier
+    carrier: roleCarrier,
+    conduit: roleConduit
 }
-
-
 
 function wantToBuild(spawn, thisRole)
 {
