@@ -398,13 +398,13 @@ module.exports.destinations = {
             var flag = s.pos.lookFor(LOOK_FLAGS);
             return(flag && !flag[0].name.startsWith('Source'));
         });
-        var targets = allStructures.filter((s) => { s.store[RESOURCE_ENERGY] < 0.25* s.storeCapacity} );
+        var targets = allStructures.filter((s) => { return s.store[RESOURCE_ENERGY] < (0.25* s.storeCapacity)} );
         if( ! targets.length)
-            targets = allStructures.filter((s) => { s.store[RESOURCE_ENERGY] < 0.5* s.storeCapacity} );
+            targets = allStructures.filter((s) => { return s.store[RESOURCE_ENERGY] < (0.5* s.storeCapacity)} );
         if( ! targets.length)
-            targets = allStructures.filter((s) => { s.store[RESOURCE_ENERGY] < 0.75* s.storeCapacity} );
+            targets = allStructures.filter((s) => { return s.store[RESOURCE_ENERGY] < (0.75* s.storeCapacity)} );
         if( ! targets.length)
-            targets = allStructures;
+            targets = allStructures.filter((s) => { return (s.store[RESOURCE_ENERGY] + creep.carry[RESOURCE_ENERGY]) < s.storeCapacity});
         if( targets.length)
         {
             targets = _.sortBy(targets, (s) => creep.pos.getRangeTo(s));
