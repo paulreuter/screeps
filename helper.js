@@ -58,6 +58,31 @@ module.exports = {
     var blueprints = room.find( FIND_MY_CONSTRUCTION_SITES);
     blueprints.forEach((s) => s.remove());
 
+    },
+    
+    createLink: function( room, startLink, endLink)
+    {
+        if( ! room.memory.links)
+        {
+            room.memory.links = [];
+        }
+        var newLink = {};
+        newLink['from'] = startLink.id;
+        newLink['to'] = endLink.id;
+        room.memory.links.push(newLink);
+    },
+    
+    createConduit: function( room, position, from, to)
+    {
+        if( !room.memory.conduits)
+        {
+            room.memory.conduits = [];
+        }
+        var newConduit = {};
+        newConduit['pos'] = position;
+        newConduit['from'] = from;
+        newConduit['to'] = to;
+        room.memory.conduits.push(newConduit);
     }
 
 };
