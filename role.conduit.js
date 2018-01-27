@@ -15,7 +15,7 @@ run: function(creep) {
     }
     if( ! creep.memory.comfy)
     {
-        var pos = creep.memory.myPos;
+        var pos = creep.memory.pos;
         if( ! pos)
         {
             for( var i in creep.room.memory.conduits)
@@ -38,7 +38,7 @@ run: function(creep) {
         {
             if( !creep.pos.inRangeTo(pos, 0) )
             {
-                creep.moveTo(pos, {visualizePathStyle: {stroke: '#ffaa00'}});
+                creep.moveTo(pos.x, pos.y, {visualizePathStyle: {stroke: '#ffaa00'}});
                 return;
             } else 
             {
