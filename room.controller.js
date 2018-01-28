@@ -108,10 +108,32 @@ function evaluateState(room) {
     }
 }
 
+function operateLinks(room)
+{
+    if( room.memory.links)
+    {
+        for( var i in room.memory.links)
+        {
+            var from = Game.getObjectById(room.memory.links[i].from);
+            var to = Game.getObjectById(room.memory.links[i].to);
+            if(from && to)
+            {
+                if(from.cooldown == 0 && from.energy > 0.5* from.energyCapacity)
+                {
+                    if(to.energy < to.energyCapacity)
+                    {
+                        from.transferEnergy(to);
+                    }
+                }
+            }
+        }
+    }
+}
 
 module.exports = {
 
     run: function(room) {
         evaluateState(room);
+        operateLinks(room);
     }
 };
