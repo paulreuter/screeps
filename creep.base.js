@@ -396,7 +396,7 @@ module.exports.destinations = {
         });
         allStructures = allStructures.filter( (s) => {
             var flag = s.pos.lookFor(LOOK_FLAGS);
-            return(flag && !flag[0].name.startsWith('Source'));
+            return(flag && flag.length && !flag[0].name.startsWith('Source'));
         });
         var targets = allStructures.filter((s) => { return s.store[RESOURCE_ENERGY] < (0.25* s.storeCapacity)} );
         if( ! targets.length)
